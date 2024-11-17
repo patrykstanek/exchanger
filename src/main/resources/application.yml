@@ -1,0 +1,9 @@
+spring.application.name: exchanger
+
+spring:
+  data.mongodb:
+    host: localhost
+    port: 27017
+    database: exchanger
+    username: exchanger_user
+    password: exchanger_pass
