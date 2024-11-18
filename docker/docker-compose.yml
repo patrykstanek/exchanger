@@ -1,17 +1,17 @@
 version: '3.1'
 
 services:
-  mongodb-service:
-    image: mongo:${MONGO_VERSION}
-    container_name: mongodb-exchanger
+  postgresdb-service:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: postgresdb-exchanger
     volumes:
-      - mongodata:/data/mongodb
+      - postgresdata:/data/postgresdb
     environment:
-      MONGO_INITDB_ROOT_USERNAME: exchanger_user
-      MONGO_INITDB_ROOT_PASSWORD: exchanger_pass
-      MONGO_INITDB_DATABASE: exchanger
+      POSTGRES_USER: exchanger_user
+      POSTGRES_PASSWORD: exchanger_pass
+      POSTGRES_DB: exchanger
     ports:
-      - "27017:27017"
+      - "5432:5432"
 
 volumes:
-  mongodata:
+  postgresdata:

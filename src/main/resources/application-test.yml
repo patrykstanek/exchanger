@@ -1,0 +1,8 @@
+wiremock:
+  host: http://localhost
+  port: 3333
+
+dependencies:
+  nbp:
+    url: "${wiremock.host}:${wiremock.port}"
+    timeout: "100ms"

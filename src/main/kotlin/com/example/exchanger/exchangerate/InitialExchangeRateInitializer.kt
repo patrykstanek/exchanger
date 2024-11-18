@@ -5,7 +5,7 @@ import jakarta.annotation.PostConstruct
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
-@Profile("!integration")
+@Profile("!test")
 @Component
 internal class InitialExchangeRateInitializer(
     private val service: ExchangeRateInitializer
@@ -13,7 +13,7 @@ internal class InitialExchangeRateInitializer(
 
     @PostConstruct
     fun initializeInitialExchangeRates() {
-        service.initialize()
+        service.updateExchangeRates()
         log.info("Initial exchange rates updated.")
     }
 

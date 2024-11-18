@@ -1,9 +1,18 @@
-spring.application.name: exchanger
-
 spring:
-  data.mongodb:
-    host: localhost
-    port: 27017
-    database: exchanger
+  application:
+    name: exchanger
+  datasource:
+    url: jdbc:postgresql://localhost:5432/exchanger
     username: exchanger_user
     password: exchanger_pass
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # don't use create-drop on prod, only validate
+
+dependencies:
+  nbp:
+    name: NbpCLient
+    url: https://api.nbp.pl
+    timeout: PT1S
+    max-connections: 5

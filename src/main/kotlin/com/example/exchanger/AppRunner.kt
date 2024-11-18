@@ -4,8 +4,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class ExchangerApplication
+class AppRunner
 
 fun main(args: Array<String>) {
-	runApplication<ExchangerApplication>(*args)
+	runApplication<AppRunner>(*args)
 }
