@@ -7,14 +7,12 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import static org.springframework.http.HttpHeaders.ACCEPT
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 
-class NbpTestClient {
+class ExchangerTestClient {
 
-    private final static String PATH = "/api/exchangerates/rates/a/usd"
-    private final static String JSON_FORMAT = "json"
     private final int port
     private final WebTestClient webTestClient
 
-    NbpTestClient(Integer port, WebTestClient webTestClient) {
+    ExchangerTestClient(Integer port, WebTestClient webTestClient) {
         this.port = port
         this.webTestClient = webTestClient
     }

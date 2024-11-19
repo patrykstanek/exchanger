@@ -2,6 +2,7 @@ package com.example.exchanger.exchangerate.infrastructure.postgres
 
 import com.example.exchanger.exchangerate.ExchangeRate
 import com.example.exchanger.exchangerate.ExchangeRateRepository
+import com.example.exchanger.shared.Currency
 import org.springframework.stereotype.Component
 
 @Component
@@ -13,12 +14,15 @@ internal class ExchangeRateRepositoryAdapter(
         exchangeRates.onEach { save(it) }
     }
 
-    override fun findBySourceCurrency(sourceCurrency: String): ExchangeRate? =
-        repository.findBySourceCurrency(sourceCurrency)
+    override fun findBySourceCurrencyAndTargetCurrency(
+        sourceCurrency: Currency,
+        targetCurrency: Currency
+    ): ExchangeRate? =
+        repository.findBySourceCurrencyAndTargetCurrency(sourceCurrency, targetCurrency)
             ?.toDomain()
 
     private fun save(exchangeRate: ExchangeRate) {
-        val entity = repository.findBySourceCurrency(exchangeRate.source)
+        val entity = repository.findBySourceCurrencyAndTargetCurrency(exchangeRate.source, exchangeRate.target)
         if (entity == null) {
             exchangeRate.toEntity()
                 .let(repository::save)

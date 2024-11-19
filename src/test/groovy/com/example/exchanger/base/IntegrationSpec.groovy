@@ -15,7 +15,6 @@ import spock.lang.Specification
 @ActiveProfiles("test")
 @SpringBootTest(classes = [AppRunner], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(initializers = [WireMockInitializer.class, PostgreSQLTestContainer.class])
-//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 abstract class IntegrationSpec extends Specification {
 
     @LocalServerPort

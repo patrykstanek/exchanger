@@ -1,5 +1,6 @@
 package com.example.exchanger.exchangerate.infrastructure.postgres
 
+import com.example.exchanger.shared.Currency
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -10,11 +11,11 @@ data class ExchangeRateEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-    @Column(unique = true)
-    val sourceCurrency: String,
-    @Column(unique = true)
-    val targetCurrency: String,
+    @Enumerated(EnumType.STRING)
+    val sourceCurrency: Currency,
+    @Enumerated(EnumType.STRING)
+    val targetCurrency: Currency,
     var emittedAt: LocalDate,
-    @Column(precision = 20, scale = 4)
+    @Column(precision = 10, scale = 4)
     var rate: BigDecimal
 )

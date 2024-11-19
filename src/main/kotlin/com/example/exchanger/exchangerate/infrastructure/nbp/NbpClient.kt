@@ -1,6 +1,7 @@
 package com.example.exchanger.exchangerate.infrastructure.nbp
 
 import com.example.exchanger.exchangerate.ExchangeRate
+import com.example.exchanger.shared.Currency
 import com.example.exchanger.shared.logger
 import org.springframework.http.HttpHeaders.ACCEPT
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
@@ -47,7 +48,7 @@ class NbpClient(
     companion object {
         const val URI: String = "/api/exchangerates/rates/a/usd"
         const val JSON_FORMAT: String = "json"
-        const val TARGET_CURRENCY: String = "PLN"
+        val TARGET_CURRENCY: Currency = Currency.PLN
         private val log by logger()
     }
 }
@@ -58,6 +59,6 @@ data class RateDto(
 )
 
 data class ExchangeRateDto(
-    val code: String,
+    val code: Currency,
     val rates: List<RateDto>
 )

@@ -9,6 +9,8 @@ import java.math.RoundingMode
 import java.time.LocalDate
 
 import static com.example.exchanger.exchangerate.infrastructure.nbp.NbpResponse.*
+import static com.example.exchanger.shared.Currency.PLN
+import static com.example.exchanger.shared.Currency.USD
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 
 class ExchangeRateItSpec extends MvcIntegrationSpec {
@@ -16,11 +18,14 @@ class ExchangeRateItSpec extends MvcIntegrationSpec {
     @Autowired
     NbpStubbingTestService nbpStubbing
 
+    @Autowired
+    ExchangeRateFacade exchangeRateFacade
+
     def setup() {
         cleanupExchangeRateRepository()
     }
 
-    def "should save fetched exchange rate"() {
+    def "should save fetched exchange rate and then find them"() {
         given:
             def rate = new BigDecimal(EXCHANGE_RATE)
             nbpStubbing.stubExchangeRateSucceededResponse(exchangeRateResponse(rate.toString()))
@@ -30,8 +35,15 @@ class ExchangeRateItSpec extends MvcIntegrationSpec {
             def savedExchangeRates = exchangeRateRepository.findAll().toList()
             nbpStubbing.getAllInteractions().size() == 1
             savedExchangeRates.size() == 2
-            savedExchangeRates.any { it.sourceCurrency == 'USD' && it.targetCurrency == 'PLN' && it.rate == rate && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
-            savedExchangeRates.any { it.sourceCurrency == 'PLN' && it.targetCurrency == 'USD' && it.rate == BigDecimal.ONE.divide(rate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
+            savedExchangeRates.any { it.sourceCurrency == USD && it.targetCurrency == PLN && it.rate == rate && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
+            savedExchangeRates.any { it.sourceCurrency == PLN && it.targetCurrency == USD && it.rate == BigDecimal.ONE.divide(rate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
+        when: "should find usd/pln pair"
+            def usdPlnPair = exchangeRateFacade.findExchangeRate(USD, PLN)
+        then:
+            usdPlnPair.source == USD
+            usdPlnPair.target == PLN
+            usdPlnPair.rate == rate
+            usdPlnPair.emittedAt == LocalDate.parse(PUBLISH_DATE)
     }
 
     def "should not save anything if the NBP API response is empty"() {
@@ -85,8 +97,8 @@ class ExchangeRateItSpec extends MvcIntegrationSpec {
             def savedExchangeRates = exchangeRateRepository.findAll().toList()
             nbpStubbing.getAllInteractions().size() == 1
             savedExchangeRates.size() == 2
-            savedExchangeRates.any { it.sourceCurrency == 'USD' && it.targetCurrency == 'PLN' && it.rate == previousRate && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
-            savedExchangeRates.any { it.sourceCurrency == 'PLN' && it.targetCurrency == 'USD' && it.rate == BigDecimal.ONE.divide(previousRate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
+            savedExchangeRates.any { it.sourceCurrency == USD && it.targetCurrency == PLN && it.rate == previousRate && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
+            savedExchangeRates.any { it.sourceCurrency == PLN && it.targetCurrency == USD && it.rate == BigDecimal.ONE.divide(previousRate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
 
         when: "the service updates exchange rates for second time"
             nbpStubbing.stubExchangeRateSucceededResponse(exchangeRateResponse(updateRate.toString(), updateDate))
@@ -96,7 +108,7 @@ class ExchangeRateItSpec extends MvcIntegrationSpec {
             def updatedExchangeRates = exchangeRateRepository.findAll().toList()
             nbpStubbing.getAllInteractions().size() == 2
             updatedExchangeRates.size() == 2
-            updatedExchangeRates.any { it.sourceCurrency == 'USD' && it.targetCurrency == 'PLN' && it.rate == updateRate && it.emittedAt == LocalDate.parse(updateDate) }
-            updatedExchangeRates.any { it.sourceCurrency == 'PLN' && it.targetCurrency == 'USD' && it.rate == BigDecimal.ONE.divide(updateRate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(updateDate) }
+            updatedExchangeRates.any { it.sourceCurrency == USD && it.targetCurrency == PLN && it.rate == updateRate && it.emittedAt == LocalDate.parse(updateDate) }
+            updatedExchangeRates.any { it.sourceCurrency == PLN && it.targetCurrency == USD && it.rate == BigDecimal.ONE.divide(updateRate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(updateDate) }
     }
 }

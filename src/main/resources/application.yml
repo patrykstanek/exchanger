@@ -15,4 +15,8 @@ dependencies:
     name: NbpCLient
     url: https://api.nbp.pl
     timeout: PT1S
-    max-connections: 5
+    max-connections: 10
+
+exchange-rate:
+  scheduler:
+    timer-rate: "0 30 12 * * MON-FRI"

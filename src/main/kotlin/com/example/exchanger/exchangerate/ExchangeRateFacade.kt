@@ -1,12 +1,13 @@
 package com.example.exchanger.exchangerate
 
+import com.example.exchanger.shared.Currency
 import org.springframework.stereotype.Component
 
 @Component
-internal class ExchangeRateFacade(
+class ExchangeRateFacade(
     private val service: ExchangeRateService
 ) {
-    fun findExchangeRate(sourceCurrency: String): ExchangeRate? =
-        service.findExchangeRate(sourceCurrency)
+    fun findExchangeRate(sourceCurrency: Currency, targetCurrency: Currency): ExchangeRate =
+        service.findExchangeRate(sourceCurrency, targetCurrency)
 
 }

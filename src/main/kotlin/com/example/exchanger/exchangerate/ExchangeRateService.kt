@@ -1,18 +1,20 @@
 package com.example.exchanger.exchangerate
 
 import com.example.exchanger.exchangerate.infrastructure.nbp.NbpClient
+import com.example.exchanger.shared.Currency
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode.HALF_UP
 
 @Service
-internal class ExchangeRateService(
+class ExchangeRateService(
     private val nbpClient: NbpClient,
     private val repository: ExchangeRateRepository
 ) : ExchangeRateInitializer {
 
-    fun findExchangeRate(sourceCurrency: String): ExchangeRate? =
-        repository.findBySourceCurrency(sourceCurrency)
+    fun findExchangeRate(sourceCurrency: Currency, targetCurrency: Currency): ExchangeRate =
+        repository.findBySourceCurrencyAndTargetCurrency(sourceCurrency, targetCurrency)
+            ?: throw ExchangeRateNotFoundException(sourceCurrency, targetCurrency)
 
     override fun updateExchangeRates() {
         nbpClient.fetchExchangeRate()

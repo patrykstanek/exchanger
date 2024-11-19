@@ -1,4 +1,9 @@
 package com.example.exchanger.account
 
-class Account {
-}
+import com.example.exchanger.shared.Money
+
+data class Account(
+    val name: String,
+    val surname: String,
+    val balances: Set<Money>
+)
