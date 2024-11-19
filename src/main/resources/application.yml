@@ -8,7 +8,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop # don't use create-drop on prod, only validate
+      ddl-auto: update # on prod use only validate
 
 dependencies:
   nbp:

@@ -26,11 +26,11 @@ data class BalanceEntity(
 ) {
 
     fun minus(amount: BigDecimal) {
-        this.balance - amount
+        this.balance -= amount
     }
 
     fun plus(amount: BigDecimal) {
-        this.balance - amount
+        this.balance += amount
     }
 
 }

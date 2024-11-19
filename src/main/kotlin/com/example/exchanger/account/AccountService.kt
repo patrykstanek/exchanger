@@ -30,21 +30,40 @@ class AccountService(
         val accountBalances =
             balanceRepository.findByAccountId(accountId).ifEmpty { throw BalancesNotFoundException(accountId) }
         validateAccountsCurrency(accountBalances, exchangeDetails)
-        accountBalances.filter { it.currency == exchangeDetails.sourceCurrency }
-            .onEach {
-                validateEnoughMoney(it.balance, exchangeDetails.amountToExchange)
-                it.minus(exchangeDetails.amountToExchange)
-            }
+        withdrawMoneyFromSource(accountBalances, exchangeDetails)
 
         val exchangeRate =
             exchangeRateFacade.findExchangeRate(exchangeDetails.sourceCurrency, exchangeDetails.targetCurrency)
         val exchangedAmount = Money(exchangeDetails.amountToExchange, exchangeDetails.sourceCurrency)
             .times(exchangeRate.rate)
 
-        val targetBalance = accountBalances.find { it.currency == exchangeDetails.targetCurrency }!!
-        targetBalance.balance = targetBalance.balance.plus(exchangedAmount.amount)
+        sendToTarget(accountBalances, exchangeDetails, exchangedAmount)
 
         balanceRepository.saveAll(accountBalances)
+    }
+
+    fun findById(accountId: Long): Account {
+        return repository.findById(accountId).toDomain()
+    }
+
+    private fun sendToTarget(
+        accountBalances: List<BalanceEntity>,
+        exchangeDetails: ExchangeDetails,
+        exchangedAmount: Money
+    ) {
+        val targetBalance = accountBalances.find { it.currency == exchangeDetails.targetCurrency }!!
+        targetBalance.plus(exchangedAmount.amount)
+    }
+
+    private fun withdrawMoneyFromSource(
+        accountBalances: List<BalanceEntity>,
+        exchangeDetails: ExchangeDetails
+    ) {
+        accountBalances.filter { it.currency == exchangeDetails.sourceCurrency }
+            .onEach {
+                validateEnoughMoney(it.balance, exchangeDetails.amountToExchange)
+                it.minus(exchangeDetails.amountToExchange)
+            }
     }
 
     private fun validateEnoughMoney(sourceBalance: BigDecimal, amountToWithdraw: BigDecimal) {
@@ -55,10 +74,6 @@ class AccountService(
         if (!(accountBalances.any { it.currency == exchangeDetails.sourceCurrency } && accountBalances.any { it.currency == exchangeDetails.targetCurrency })) {
             throw RuntimeException("Account can not handle exchange in these currencies")
         }
-    }
-
-    fun findById(accountId: Long): Account {
-        return repository.findById(accountId).toDomain()
     }
 
     private fun buildAccountBalances(account: Account, accountEntity: AccountEntity) =
