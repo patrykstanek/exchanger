@@ -1,8 +1,7 @@
 package com.example.exchanger.exchangerate
 
-import com.example.exchanger.base.MvcIntegrationSpec
+import com.example.exchanger.base.IntegrationSpec
 import com.example.exchanger.exchangerate.infrastructure.nbp.NbpClientException
-import com.example.exchanger.exchangerate.infrastructure.nbp.NbpStubbingTestService
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.math.RoundingMode
@@ -13,10 +12,7 @@ import static com.example.exchanger.shared.Currency.PLN
 import static com.example.exchanger.shared.Currency.USD
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 
-class ExchangeRateItSpec extends MvcIntegrationSpec {
-
-    @Autowired
-    NbpStubbingTestService nbpStubbing
+class ExchangeRateItSpec extends IntegrationSpec {
 
     @Autowired
     ExchangeRateFacade exchangeRateFacade
@@ -85,10 +81,12 @@ class ExchangeRateItSpec extends MvcIntegrationSpec {
         given: "a first valid response from the NBP API"
             nbpStubbing.stubExchangeRateSucceededResponse()
             def previousRate = new BigDecimal(EXCHANGE_RATE)
+            def expectedSavedRate = BigDecimal.ONE.divide(previousRate, 4, RoundingMode.HALF_UP)
 
         and: "a content of second response"
             def updateRate = new BigDecimal("4.1105")
             def updateDate = "2024-11-18"
+            def expectedUpdatedRate = BigDecimal.ONE.divide(updateRate, 4, RoundingMode.HALF_UP)
 
         when: "the service updates exchange rates for first time"
             exchangeRateInitializer.updateExchangeRates()
@@ -97,8 +95,18 @@ class ExchangeRateItSpec extends MvcIntegrationSpec {
             def savedExchangeRates = exchangeRateRepository.findAll().toList()
             nbpStubbing.getAllInteractions().size() == 1
             savedExchangeRates.size() == 2
-            savedExchangeRates.any { it.sourceCurrency == USD && it.targetCurrency == PLN && it.rate == previousRate && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
-            savedExchangeRates.any { it.sourceCurrency == PLN && it.targetCurrency == USD && it.rate == BigDecimal.ONE.divide(previousRate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(PUBLISH_DATE) }
+            savedExchangeRates.any {
+                it.sourceCurrency == USD &&
+                    it.targetCurrency == PLN &&
+                    it.rate == previousRate &&
+                    it.emittedAt == LocalDate.parse(PUBLISH_DATE)
+            }
+            savedExchangeRates.any {
+                it.sourceCurrency == PLN &&
+                    it.targetCurrency == USD &&
+                    it.rate == expectedSavedRate &&
+                    it.emittedAt == LocalDate.parse(PUBLISH_DATE)
+            }
 
         when: "the service updates exchange rates for second time"
             nbpStubbing.stubExchangeRateSucceededResponse(exchangeRateResponse(updateRate.toString(), updateDate))
@@ -108,7 +116,17 @@ class ExchangeRateItSpec extends MvcIntegrationSpec {
             def updatedExchangeRates = exchangeRateRepository.findAll().toList()
             nbpStubbing.getAllInteractions().size() == 2
             updatedExchangeRates.size() == 2
-            updatedExchangeRates.any { it.sourceCurrency == USD && it.targetCurrency == PLN && it.rate == updateRate && it.emittedAt == LocalDate.parse(updateDate) }
-            updatedExchangeRates.any { it.sourceCurrency == PLN && it.targetCurrency == USD && it.rate == BigDecimal.ONE.divide(updateRate, 4, RoundingMode.HALF_UP) && it.emittedAt == LocalDate.parse(updateDate) }
+            updatedExchangeRates.any {
+                it.sourceCurrency == USD &&
+                    it.targetCurrency == PLN &&
+                    it.rate == updateRate &&
+                    it.emittedAt == LocalDate.parse(updateDate)
+            }
+            updatedExchangeRates.any {
+                it.sourceCurrency == PLN &&
+                    it.targetCurrency == USD &&
+                    it.rate == expectedUpdatedRate &&
+                    it.emittedAt == LocalDate.parse(updateDate)
+            }
     }
 }

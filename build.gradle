@@ -18,7 +18,8 @@ project.ext.versions = [
     netty_resolver    : '4.1.115.Final',
     testcontainers    : '1.20.3',
     kotlin            : '1.9.25',
-    jakarta_validation: '3.1.0'
+    jakarta_validation: '3.1.0',
+    jackson           : '2.18.1'
 ]
 
 java {
@@ -36,6 +37,7 @@ dependencies {
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
     implementation group: 'org.apache.groovy', name: 'groovy-all', version: versions.groovy
     implementation group: 'jakarta.validation', name: 'jakarta.validation-api', version: versions.jakarta_validation
+    implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: versions.jackson
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
 
     runtimeOnly 'org.postgresql:postgresql'

@@ -1,16 +1,21 @@
 package com.example.exchanger.account.infrastructure.http
 
-import jakarta.validation.constraints.DecimalMin
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
 
-internal data class AccountDto(
-    @NotBlank
+data class AccountDto(
     val name: String,
-    @NotBlank
     val surname: String,
-    @NotNull
-    @DecimalMin(value = "0.00")
     val initialBalance: BigDecimal
-)
+) {
+    init {
+        if (initialBalance < BigDecimal.ZERO) {
+            throw InvalidAmountException()
+        }
+        if (name.isEmpty()) {
+            throw FieldValidationException("name must not be empty")
+        }
+        if (surname.isEmpty()) {
+            throw FieldValidationException("surname must not be empty")
+        }
+    }
+}

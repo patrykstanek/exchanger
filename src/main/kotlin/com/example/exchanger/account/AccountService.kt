@@ -1,5 +1,6 @@
 package com.example.exchanger.account
 
+import com.example.exchanger.account.infrastructure.http.AccountBalancesDto
 import com.example.exchanger.account.infrastructure.postgres.AccountEntity
 import com.example.exchanger.balance.infrastructure.BalanceEntity
 import com.example.exchanger.balance.infrastructure.BalancePostgresRepository
@@ -18,42 +19,32 @@ class AccountService(
     private val balanceRepository: BalancePostgresRepository,
     private val exchangeRateFacade: ExchangeRateFacade
 ) {
+
     @Transactional
     fun createAccount(account: Account): AccountId {
-        return repository.save(account)
-            .also { balanceRepository.saveAll(buildAccountBalances(account, it)) }
-            .let { AccountId(it.id!!) }
+        val accountEntity = repository.save(account.toEntity())
+        return buildAccountBalances(account, accountEntity)
+            .let { balanceRepository.saveAll(it) }
+            .let { AccountId(accountEntity.id!!) }
     }
 
     @Transactional
-    fun exchange(accountId: Long, exchangeDetails: ExchangeDetails) {
+    fun exchange(accountId: Long, exchangeDetails: ExchangeDetails): AccountBalancesDto {
         val accountBalances =
-            balanceRepository.findByAccountId(accountId).ifEmpty { throw BalancesNotFoundException(accountId) }
-        validateAccountsCurrency(accountBalances, exchangeDetails)
-        withdrawMoneyFromSource(accountBalances, exchangeDetails)
+            balanceRepository.findByAccountId(accountId)
+                .ifEmpty { throw BalancesNotFoundException(accountId) }
+                .also { validateAccountsCurrency(it, exchangeDetails) }
+                .also { withdrawMoneyFromSource(it, exchangeDetails) }
 
-        val exchangeRate =
-            exchangeRateFacade.findExchangeRate(exchangeDetails.sourceCurrency, exchangeDetails.targetCurrency)
-        val exchangedAmount = Money(exchangeDetails.amountToExchange, exchangeDetails.sourceCurrency)
-            .times(exchangeRate.rate)
-
+        val exchangedAmount = calculateAmountInTargetCurrency(exchangeDetails)
         sendToTarget(accountBalances, exchangeDetails, exchangedAmount)
 
-        balanceRepository.saveAll(accountBalances)
+        return balanceRepository.saveAll(accountBalances).toSet()
+            .let { buildAccountBalances(AccountId(accountId), it) }
     }
 
-    fun findById(accountId: Long): Account {
-        return repository.findById(accountId).toDomain()
-    }
-
-    private fun sendToTarget(
-        accountBalances: List<BalanceEntity>,
-        exchangeDetails: ExchangeDetails,
-        exchangedAmount: Money
-    ) {
-        val targetBalance = accountBalances.find { it.currency == exchangeDetails.targetCurrency }!!
-        targetBalance.plus(exchangedAmount.amount)
-    }
+    fun findById(accountId: Long): Account =
+        repository.findById(accountId).toDomain()
 
     private fun withdrawMoneyFromSource(
         accountBalances: List<BalanceEntity>,
@@ -66,8 +57,24 @@ class AccountService(
             }
     }
 
+    private fun calculateAmountInTargetCurrency(exchangeDetails: ExchangeDetails): Money {
+        val exchangeRate =
+            exchangeRateFacade.findExchangeRate(exchangeDetails.sourceCurrency, exchangeDetails.targetCurrency)
+        return Money(exchangeDetails.amountToExchange, exchangeDetails.sourceCurrency)
+            .times(exchangeRate.rate)
+    }
+
+    private fun sendToTarget(
+        accountBalances: List<BalanceEntity>,
+        exchangeDetails: ExchangeDetails,
+        exchangedAmount: Money
+    ) {
+        val targetBalance = accountBalances.find { it.currency == exchangeDetails.targetCurrency }!!
+        targetBalance.plus(exchangedAmount.amount)
+    }
+
     private fun validateEnoughMoney(sourceBalance: BigDecimal, amountToWithdraw: BigDecimal) {
-        if (sourceBalance < amountToWithdraw) throw RuntimeException("Not enough money")
+        if (sourceBalance < amountToWithdraw) throw InsufficientFundsException("Insufficient funds: Requested $amountToWithdraw but only $sourceBalance available.")
     }
 
     private fun validateAccountsCurrency(accountBalances: List<BalanceEntity>, exchangeDetails: ExchangeDetails) {
@@ -76,8 +83,8 @@ class AccountService(
         }
     }
 
-    private fun buildAccountBalances(account: Account, accountEntity: AccountEntity) =
-        setOf(
+    private fun buildAccountBalances(account: Account, accountEntity: AccountEntity): List<BalanceEntity> =
+        listOf(
             buildAccountBalance(account.balances.first(), accountEntity),
             buildAccountBalance(Money(BigDecimal.ZERO, Currency.USD), accountEntity)
         )
@@ -89,6 +96,13 @@ class AccountService(
             account = accountEntity
         )
 
+    fun buildAccountBalances(accountId: AccountId, balanceEntities: Set<BalanceEntity>) =
+        AccountBalancesDto(
+            accountId = accountId,
+            balances = balanceEntities.map {
+                Money(it.balance, it.currency)
+            }.toSet()
+        )
 }
 
 private fun AccountEntity.toDomain(): Account =
@@ -96,7 +110,12 @@ private fun AccountEntity.toDomain(): Account =
         name = this.name,
         surname = this.surname,
         balances = this.balances
-            ?.map { Money(it.balance, it.currency) }
-            ?.toSet()
-            ?: emptySet()
+            .map { Money(it.balance, it.currency) }
+            .toSet()
+    )
+
+private fun Account.toEntity(): AccountEntity =
+    AccountEntity(
+        name = this.name,
+        surname = this.surname
     )

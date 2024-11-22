@@ -9,10 +9,10 @@ abstract class MvcIntegrationSpec extends IntegrationSpec {
     @Autowired
     protected WebTestClient webTestClient
 
-    protected ExchangerTestClient nbpTestClient
+    protected ExchangerTestClient exchangerTestClient
 
     @Before
     void setupHttpClient() {
-        nbpTestClient = new ExchangerTestClient(wireMockPort, webTestClient)
+        exchangerTestClient = new ExchangerTestClient(port, webTestClient)
     }
 }

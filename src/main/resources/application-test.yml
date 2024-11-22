@@ -6,3 +6,8 @@ dependencies:
   nbp:
     url: "${wiremock.host}:${wiremock.port}"
     timeout: "100ms"
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # on prod use only validate

@@ -22,7 +22,10 @@ internal class AccountEndpoint(
     }
 
     @PatchMapping("/{accountId}/exchange")
-    fun exchange(@PathVariable accountId: Long, @RequestBody exchangeDto: ExchangeDto): ResponseEntity<Any> {
+    fun exchange(
+        @PathVariable accountId: Long,
+        @RequestBody exchangeDto: ExchangeDto
+    ): ResponseEntity<AccountBalancesDto> {
         return accountFacade.exchange(accountId, exchangeDto.toDomain())
             .let { ResponseEntity.ok(it) }
     }
