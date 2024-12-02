@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
 @Component
-class ExchangerRateUpdater(
+internal class ExchangerRateUpdater(
     private val exchangerRateInitializer: ExchangeRateInitializer
 ) {
     /**

@@ -1,5 +1,5 @@
 package com.example.exchanger.exchangerate
 
-fun interface ExchangeRateInitializer {
+internal fun interface ExchangeRateInitializer {
     fun updateExchangeRates()
 }

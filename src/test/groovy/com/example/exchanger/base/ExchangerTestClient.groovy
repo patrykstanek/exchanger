@@ -25,7 +25,7 @@ class ExchangerTestClient {
 
     AccountId createAccountExpectingSuccess(String accountRequest) {
         return post(accountRequest)
-            .expectStatus().isOk()
+            .expectStatus().isCreated()
             .expectBody(AccountId.class)
             .returnResult()
             .responseBody

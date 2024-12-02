@@ -12,5 +12,5 @@ class AccountEntity(
     val name: String,
     val surname: String,
     @OneToMany(mappedBy = "account", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
-    val balances: MutableList<BalanceEntity> = mutableListOf()
+    val balances: List<BalanceEntity>? = null
 )

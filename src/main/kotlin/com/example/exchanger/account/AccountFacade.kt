@@ -5,7 +5,7 @@ import com.example.exchanger.shared.AccountId
 import org.springframework.stereotype.Component
 
 @Component
-class AccountFacade(
+internal class AccountFacade(
     private val service: AccountService
 ) {
     fun createAccount(account: Account): AccountId =

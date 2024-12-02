@@ -6,6 +6,7 @@ import com.example.exchanger.account.ExchangeDetails
 import com.example.exchanger.shared.AccountId
 import com.example.exchanger.shared.Currency
 import com.example.exchanger.shared.Money
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -18,7 +19,7 @@ internal class AccountEndpoint(
     @PostMapping
     fun createAccount(@RequestBody accountDto: AccountDto): ResponseEntity<AccountId> {
         return accountFacade.createAccount(accountDto.toDomain())
-            .let { ResponseEntity.ok(it) }
+            .let { ResponseEntity.status(HttpStatus.CREATED).body(it) }
     }
 
     @PatchMapping("/{accountId}/exchange")

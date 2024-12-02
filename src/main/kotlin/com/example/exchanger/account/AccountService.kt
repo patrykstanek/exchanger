@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 @Service
-class AccountService(
+internal class AccountService(
     private val repository: AccountRepository,
     private val balanceRepository: BalancePostgresRepository,
     private val exchangeRateFacade: ExchangeRateFacade
@@ -110,8 +110,9 @@ private fun AccountEntity.toDomain(): Account =
         name = this.name,
         surname = this.surname,
         balances = this.balances
-            .map { Money(it.balance, it.currency) }
-            .toSet()
+            ?.map { Money(it.balance, it.currency) }
+            ?.toSet()
+            ?: setOf()
     )
 
 private fun Account.toEntity(): AccountEntity =
